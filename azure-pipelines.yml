@@ -1,0 +1,116 @@
+
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Set this to your Azure DevOps service connection name
+  azureServiceConnection: 'az-spn-connection'
+
+  # Terraform variables (can be overridden in pipeline Variables UI)
+  TF_VAR_resource_group_name: 'Keshav_Bhardwaj_RG'
+  TF_VAR_location: 'centralindia'
+  TF_VAR_storage_account_name: 'keshavlab1storage'
+  TF_VAR_key_vault_name: 'keshavlab1-kv'
+  TF_VAR_app_service_plan_name: 'keshavlab1-asp'
+  TF_VAR_web_app_name: 'keshavlab1-web'
+
+stages:
+- stage: DeployLandingZone
+  displayName: 'Deploy Landing Zone (Terraform)'
+  jobs:
+    - job: TerraformInit
+      displayName: 'Terraform Init'
+      steps:
+        - checkout: self
+          persistCredentials: true
+
+        - task: AzureCLI@2
+          displayName: 'Azure CLI login'
+          inputs:
+            azureSubscription: '$(azureServiceConnection)'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show
+
+        - script: |
+            set -e
+            TF_VER=1.7.5
+            curl -L -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VER}/terraform_${TF_VER}_linux_amd64.zip
+            sudo apt-get update && sudo apt-get install -y unzip
+            unzip terraform.zip
+            sudo mv terraform /usr/local/bin/terraform
+            terraform -version
+          displayName: 'Install Terraform'
+
+        - script: |
+            set -e
+            terraform init
+          displayName: 'Terraform Init'
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+    - job: TerraformPlan
+      displayName: 'Terraform Plan'
+      dependsOn: TerraformInit
+      steps:
+        - checkout: self
+
+        - task: AzureCLI@2
+          displayName: 'Azure CLI login'
+          inputs:
+            azureSubscription: '$(azureServiceConnection)'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show
+
+        - script: |
+            set -e
+            TF_VER=1.7.5
+            curl -L -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VER}/terraform_${TF_VER}_linux_amd64.zip
+            sudo apt-get update && sudo apt-get install -y unzip
+            unzip terraform.zip
+            sudo mv terraform /usr/local/bin/terraform
+            terraform -version
+          displayName: 'Install Terraform'
+
+        - script: |
+            set -e
+            terraform validate
+            terraform plan -out=tfplan
+          displayName: 'Terraform Plan'
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+    - job: TerraformApply
+      displayName: 'Terraform Apply'
+      dependsOn: TerraformPlan
+      steps:
+        - checkout: self
+
+        - task: AzureCLI@2
+          displayName: 'Azure CLI login'
+          inputs:
+            azureSubscription: '$(azureServiceConnection)'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show
+
+        - script: |
+            set -e
+            TF_VER=1.7.5
+            curl -L -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VER}/terraform_${TF_VER}_linux_amd64.zip
+            sudo apt-get update && sudo apt-get install -y unzip
+            unzip terraform.zip
+            sudo mv terraform /usr/local/bin/terraform
+            terraform -version
+          displayName: 'Install Terraform'
+
+        - script: |
+            set -e
+            terraform apply -auto-approve tfplan
+          displayName: 'Terraform Apply'
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
