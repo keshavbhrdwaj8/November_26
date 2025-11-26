@@ -1,6 +1,6 @@
 
 module "storage_account" {
-  source                = "../modules/storage_account"
+  source                = "./modules/storage_account"
   storage_account_name  = var.storage_account_name
   resource_group_name   = var.resource_group_name
   location              = var.location
@@ -8,7 +8,7 @@ module "storage_account" {
 }
 
 module "key_vault" {
-  source              = "../modules/key_vault"
+  source              = "./modules/key_vault"
   key_vault_name      = var.key_vault_name
   resource_group_name = var.resource_group_name
   location            = var.location
@@ -16,7 +16,7 @@ module "key_vault" {
 }
 
 module "app_service_plan" {
-  source                = "../modules/app_service_plan"
+  source                = "./modules/app_service_plan"
   app_service_plan_name = var.app_service_plan_name
   resource_group_name   = var.resource_group_name
   location              = var.location
@@ -24,7 +24,7 @@ module "app_service_plan" {
 }
 
 module "web_app" {
-  source              = "../modules/web_app"
+  source              = "./modules/web_app"
   web_app_name        = var.web_app_name
   resource_group_name = var.resource_group_name
   location            = var.location
