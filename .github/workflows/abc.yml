@@ -8,55 +8,76 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # enable OIDC to Azure
+  id-token: write  # OIDC to Azure
 
 env:
-  TF_VAR_resource_group_name: rg-existing
-  TF_VAR_location: centralindia
+  TF_VAR_resource_group_name: Keshav_Bhardwaj_RG
+  TF_VAR_location: eastus
   TF_VAR_storage_account_name: keshavlab1storage
   TF_VAR_key_vault_name: keshavlab1-kv
   TF_VAR_app_service_plan_name: keshavlab1-asp
   TF_VAR_web_app_name: keshavlab1-web
 
 jobs:
-  terraform-init:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-        with: { terraform_version: 1.7.5 }
-      - uses: azure/login@v2
-        with:
-         creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - run: terraform init
-
   terraform-plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
-    needs: terraform-init
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-        with: { terraform_version: 1.7.5 }
-      - uses: azure/login@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          
-      - run: terraform validate
-      - run: terraform plan -out=tfplan
-      - uses: actions/upload-artifact@v4
-        with: { name: tfplan, path: tfplan }
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
 
   terraform-apply:
+    name: Terraform Apply
     runs-on: ubuntu-latest
     needs: terraform-plan
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-        with: { terraform_version: 1.7.5 }
-      - uses: azure/login@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-         creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: actions/download-artifact@v4
-        with: { name: tfplan, path: . }
-      - run: terraform apply -auto-approve tfplan
+          terraform_version: 1.7.5
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: .
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
