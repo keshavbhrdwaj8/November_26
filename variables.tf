@@ -1,11 +1,11 @@
 
 variable "resource_group_name" {
-  description = "Name of the existing resource group to deploy into"
+  default = "Keshav_Bhardwaj_RG"
   type        = string
 }
 
 variable "location" {
-  description = "Azure region (e.g., eastus, centralindia)"
+  default = "eastus"
   type        = string
 }
 
@@ -19,21 +19,21 @@ variable "tags" {
 }
 
 variable "storage_account_name" {
-  description = "Name for the Storage Account (must be globally unique, 3-24 lowercase letters and numbers)"
+  default = "keshavlab1storage"
   type        = string
 }
 
 variable "key_vault_name" {
-  description = "Name for the Key Vault"
+  default = "keshavlab1-kv"
   type        = string
 }
 
 variable "app_service_plan_name" {
-  description = "Name for the App Service Plan"
+  default = "keshavlab1-asp"
   type        = string
 }
 
 variable "web_app_name" {
-  description = "Name for the Web App"
+  default = "keshavlab1-web"
   type        = string
 }
